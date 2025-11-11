@@ -1,7 +1,9 @@
 // js/config.js
+// update this after Railway gives you the backend URL
+const API_BASE_URL = "https://skilllens-backend.up.railway.app";
+export { API_BASE_URL };
 
-
-const API_BASE = "http://127.0.0.1:8000"; // your backend URL
+//const API_BASE = "http://127.0.0.1:8000"; // your backend URL
 
 function getToken() {
   return localStorage.getItem("token") || "";
