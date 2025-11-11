@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 pymongo[srv]
+motor
 python-dotenv
 bcrypt
 pyjwt
