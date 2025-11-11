@@ -1,0 +1,421 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillLens</title>
+
+  <!-- ✅ Added CSS link -->
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      scroll-behavior: smooth;
+      background: #f8f9fc;
+      color: #333;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      padding: 15px 40px;
+      z-index: 1000;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 18px;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: #4facfe;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .nav-buttons .signin {
+      background: transparent;
+      color: white;
+      border: 1px solid white;
+    }
+
+    .nav-buttons .signin:hover {
+      background: white;
+      color: #333;
+    }
+
+    .nav-buttons .signup {
+      background: #4facfe;
+      color: white;
+    }
+
+    .nav-buttons .signup:hover {
+      background: #00c4ff;
+    }
+
+    section {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 60px 20px;
+    }
+
+    /* HERO */
+    #home {
+      background: linear-gradient(to right, #4facfe, #00f2fe);
+      color: white;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    #home h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    #home p {
+      font-size: 1.5rem;
+      opacity: 0.9;
+    }
+
+    /* ABOUT */
+    #about {
+      background: #ffffff;
+      text-align: center;
+    }
+
+    #about h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    #about p {
+      max-width: 800px;
+      margin: 0 auto;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      color: #555;
+    }
+
+    /* FEATURES / MODULES */
+    #modules {
+      background: #f9f9f9;
+      text-align: center;
+    }
+
+    #modules h2 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+      color: #2c3e50;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .module-card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .module-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .module-card h3 {
+      color: #0077b6;
+      margin-bottom: 15px;
+    }
+
+    .module-card p {
+      color: #555;
+      font-size: 1rem;
+    }
+
+    /* FAQS */
+    #faqs {
+      background: #ffffff;
+      padding: 60px 20px;
+    }
+
+    #faqs h2 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .faq {
+  width: 800px;
+  max-width: 90%;
+  margin: 15px auto;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  background: #fefefe;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.faq-question {
+  padding: 18px;
+  cursor: pointer;
+  background: #f1f1f1;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 18px;
+  color: #555;
+  line-height: 1.6;
+}
+
+.faq.open .faq-answer {
+  max-height: 250px;
+  padding: 18px;
+}
+
+.faq:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+
+    .faq.open .faq-answer {
+      max-height: 200px;
+      padding: 18px;
+    }
+
+    /* CONTACT */
+    #contact {
+      background: #2c3e50;
+      color: white;
+      text-align: center;
+    }
+
+    #contact h2 {
+      margin-bottom: 30px;
+      font-size: 2rem;
+    }
+
+    .socials {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+    }
+
+    .socials a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      transition: color 0.3s;
+    }
+
+    .socials a:hover {
+      color: #00f2fe;
+    }
+
+    .socials img {
+      width: 28px;
+      height: 28px;
+      margin-right: 10px;
+    }
+
+    footer {
+      padding: 15px;
+      text-align: center;
+      background: #111;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-links">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#modules">Features</a>
+      <a href="#faqs">FAQs</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-buttons">
+      <button class="signin">Sign In</button>
+      <button class="signup">Sign Up</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="home">
+    <h1>Welcome to SkillLens</h1>
+    <p>AI-Powered Recruitment Made Smarter, Fairer, and Faster</p>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <h2>About Us</h2>
+    <p>SkillLens leverages cutting-edge AI, NLP, and Machine Learning to revolutionize recruitment. 
+       From resume parsing to fairness evaluation, our system ensures transparent, efficient, 
+       and insightful candidate evaluation for modern hiring teams.</p>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="modules">
+    <h2>Our Features</h2>
+    <div class="grid">
+      <div class="module-card">
+        <h3>Resume Preprocessing</h3>
+        <p>Extracts skills, education, and experience with NLP.</p>
+      </div>
+      <div class="module-card">
+        <h3>Candidate Profiling</h3>
+        <p>Maps resume data to job requirements using similarity metrics.</p>
+      </div>
+      <div class="module-card">
+        <h3>Suitability Scoring</h3>
+        <p>Ranks candidates with ML-based scoring models.</p>
+      </div>
+      <div class="module-card">
+        <h3>Fairness Evaluation</h3>
+        <p>Ensures unbiased hiring decisions using AIF360 toolkit.</p>
+      </div>
+      <div class="module-card">
+        <h3>Insight Dashboard</h3>
+        <p>Displays hiring funnels, trends, and analytics.</p>
+      </div>
+      <div class="module-card">
+        <h3>Interview Scheduling</h3>
+        <p>Automates bookings via recruiter calendar sync.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQS -->
+  <section id="faqs">
+    <h2>FAQs</h2>
+    <div class="faq">
+      <div class="faq-question">1. What is SkillLens? <span>+</span></div>
+      <div class="faq-answer">SkillLens is an AI-powered recruitment assistant that streamlines resume screening, candidate profiling, and interview scheduling.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-question">2. How does SkillLens ensure fairness? <span>+</span></div>
+      <div class="faq-answer">We use IBM’s AIF360 toolkit to detect and mitigate biases in candidate scoring, ensuring fair opportunities for all applicants.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-question">3. Do recruiters need technical knowledge to use it? <span>+</span></div>
+      <div class="faq-answer">Not at all! SkillLens provides an intuitive dashboard and filtering options so recruiters can focus on hiring decisions, not tech.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-question">4. Can SkillLens integrate with existing ATS systems? <span>+</span></div>
+      <div class="faq-answer">Yes, SkillLens APIs can connect seamlessly with popular Applicant Tracking Systems.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-question">5. Is candidate data secure? <span>+</span></div>
+      <div class="faq-answer">Absolutely. We prioritize data privacy and comply with global security standards like GDPR.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-question">6. How is interview scheduling automated? <span>+</span></div>
+      <div class="faq-answer">Our platform syncs recruiter calendars (Google, Outlook) with shortlisted candidates to automate booking.</div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <h2>Get in Touch</h2>
+    <div class="socials">
+      <a href="mailto:sklllens@gmail.com"><img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Gmail"> Gmail</a>
+      <a href="https://instagram.com"><img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram"> Instagram</a>
+      <a href="https://twitter.com"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter"> Twitter</a>
+      <a href="https://linkedin.com"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn"> LinkedIn</a>
+      <a href="tel:+919876543210"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Phone"> +91 98765 43210</a>
+      <a href="tel:+919123456789"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Phone"> +91 91234 56789</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 SkillLens. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // FAQ dropdown logic
+    const faqs = document.querySelectorAll('.faq');
+    faqs.forEach(faq => {
+      faq.querySelector('.faq-question').addEventListener('click', () => {
+        faq.classList.toggle('open');
+        let sign = faq.querySelector('span');
+        sign.textContent = faq.classList.contains('open') ? '-' : '+';
+      });
+    });
+
+    const signinBtn = document.querySelector('.signin');
+    signinBtn.addEventListener('click', () => {
+      window.location.href = 'signin.html';
+    });
+
+    const signupBtn = document.querySelector('.signup');
+    signupBtn.addEventListener('click', () => {
+      window.location.href = 'signup.html';
+    });
+  </script>
+
+  <!-- ✅ Added JS links -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,320 @@
+ <!-- resume_html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkillLens - Resume Parsing</title>
+  <style>
+    :root {
+      --primary: #4facfe;
+      --secondary: #2c3e50;
+      --light-bg: #f8f9fc;
+      --card-bg: #fff;
+      --text-dark: #2c3e50;
+      --text-light: #777;
+      --hover-bg: #00c6ff;
+    }
+    * {margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif;}
+    body {background: var(--light-bg); color: var(--text-dark); overflow-x:hidden;}
+    nav {
+      position: fixed; top:0; left:0; right:0; height:60px;
+      display:flex; justify-content:space-between; align-items:center;
+      background: rgba(0,0,0,0.85); padding:0 25px; z-index:1000;
+      box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    }
+    .nav-left {display:flex; align-items:center; gap:20px;}
+    .nav-links {display:flex; gap:20px;}
+    nav a {color:white; text-decoration:none; font-size:15px; transition:color .25s;}
+    nav a:hover {color: var(--primary);}
+    #userName {color: var(--primary); font-weight:600;}
+    .menu-toggle {
+      font-size:22px; color:white; cursor:pointer; padding:6px 10px; border-radius:6px;
+      transition: background .18s;
+    }
+    .menu-toggle:hover {background: rgba(255,255,255,0.1);}
+    .sidebar {
+      position: fixed; top:60px; left:0; height: calc(100% - 60px);
+      width:0; background: var(--secondary); transition: width .28s; overflow-x:hidden; z-index:900;
+      display:flex; flex-direction:column;
+    }
+    .sidebar.expanded {width:220px;}
+    .sidebar a {
+      display:flex; align-items:center; padding:14px 18px; color:white; text-decoration:none;
+      gap:12px; white-space:nowrap; transition: background .2s, transform .2s;
+    }
+    .sidebar a:hover {background:#34495e; transform: translateX(5px);}
+    .content {
+      margin-left:0; margin-top:60px; padding:30px;
+      transition: margin-left .28s; display:flex; flex-direction:column; gap:30px;
+    }
+    .sidebar.expanded ~ .content {margin-left:230px;}
+    .upload-box {
+      padding:30px;
+      background: var(--card-bg); border-radius:16px;
+      box-shadow:0 6px 25px rgba(0,0,0,0.08);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:25px; text-align:center; transition: transform .2s, box-shadow .2s;
+      border: 2px dashed rgba(79,172,254,0.4);
+    }
+    .upload-box:hover {transform: translateY(-5px); box-shadow:0 12px 30px rgba(0,0,0,0.12);}
+    .upload-box h2 {color: var(--primary); font-size:1.7rem;}
+    .upload-box input[type="file"] {display:none;}
+    .upload-label {
+      padding:14px 28px; background: var(--primary); color:white;
+      border-radius:10px; cursor:pointer; font-weight:600;
+      transition: background .25s, transform .15s;
+    }
+    .upload-label:hover {background: var(--hover-bg); transform: scale(1.05);}
+    .action-buttons {
+      display:flex; justify-content:center; gap:20px; flex-wrap:wrap;
+    }
+    .action-buttons button {
+      padding:16px 20px; font-size:1.05rem; font-weight:600;
+      color:white; background: linear-gradient(135deg,var(--primary), var(--hover-bg));
+      border:none; border-radius:10px; cursor:pointer;
+      transition: background .25s, transform .15s, box-shadow .2s;
+      box-shadow:0 4px 15px rgba(0,0,0,0.08);
+    }
+    .action-buttons button:hover {
+      background: linear-gradient(135deg,var(--hover-bg), var(--primary));
+      transform: scale(1.05);
+      box-shadow:0 8px 20px rgba(0,0,0,0.12);
+    }
+    .upload-box.dragover {border-color: var(--primary); background: rgba(79,172,254,0.05);}
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-left">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div class="nav-links">
+        <a href="index2.html#home">Home</a>
+        <a href="index2.html#about">About Us</a>
+        <a href="index2.html#modules">Features</a>
+        <a href="index2.html#faqs">FAQs</a>
+        <a href="index2.html#contact">Contact Us</a>
+      </div>
+    </div>
+    <div id="userName">SkillLens User</div>
+  </nav>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar" aria-hidden="true">
+    <a href="resume_parse.html"><span>Resume Parsing</span></a>
+    <a href="hiring_analysis.html"><span>Hiring Analysis</span></a>
+    <a href="candidate_ranking.html"><span>Candidate Ranking</span></a>
+    <a href="interview_schedule.html"><span>Interview Scheduler</span></a>
+    <a href="my_acc.html"><span>My Account</span></a>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+
+    <!-- OPTION 1: QUICK UPLOAD -->
+    <div class="upload-box" id="uploadBox">
+      <h2>Upload Single Resume</h2>
+      <label class="upload-label" for="pdfUpload">Select PDF</label>
+      <input type="file" id="pdfUpload" accept=".pdf">
+    </div>
+
+    <!-- OPTION 2: BULK UPLOAD -->
+    <div class="upload-box" id="bulkUploadBox">
+      <h2>Upload Multiple Resumes</h2>
+      <label class="upload-label" for="bulkUpload">Select Multiple PDFs</label>
+      <input type="file" id="bulkUpload" multiple accept=".pdf">
+      
+    </div>
+    <div class="upload-box" id="csvUploadBox">
+      <h2>Upload Candidate Data (CSV)</h2>
+      <label class="upload-label" for="csvUpload">Select CSV File</label>
+      <input type="file" id="csvUpload" accept=".csv">
+      <button id="uploadCsvBtn" class="upload-label" style="background:#2c3e50;">Upload CSV</button>
+      
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+      <button id="resultsBtn">Show Results</button>
+      <button id="scheduleBtn">Schedule Interviews</button>
+      <button id="backBtn">Go Back</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const userNameDiv = document.getElementById("userName");
+    const token = getToken();
+
+    // if not logged in
+    if (!token) {
+      userNameDiv.textContent = "Guest";
+      return;
+    }
+
+    try {
+      // call backend to get user profile
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: authHeaders()
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const user = data.user || data;
+        const displayName = user.username || user.email || "SkillLens User";
+        userNameDiv.textContent = displayName;
+      } else {
+        // fallback if /auth/me fails
+        const savedEmail = localStorage.getItem("user_email");
+        userNameDiv.textContent = savedEmail ? savedEmail.split("@")[0] : "SkillLens User";
+      }
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+      const savedEmail = localStorage.getItem("user_email");
+      userNameDiv.textContent = savedEmail ? savedEmail.split("@")[0] : "SkillLens User";
+    }
+  });
+</script>
+
+
+
+  <script>
+    // Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('menuToggle');
+    toggle.addEventListener('click', () => {
+      const expanded = sidebar.classList.toggle('expanded');
+      sidebar.setAttribute('aria-hidden', !expanded);
+      toggle.textContent = expanded ? '✕' : '☰';
+    });
+
+    // Message areas
+    const uploadBox = document.getElementById('uploadBox');
+    const messageBox = document.createElement('div');
+    uploadBox.appendChild(messageBox);
+
+    const bulkBox = document.getElementById('bulkUploadBox');
+    const bulkMessage = document.createElement('div');
+    bulkBox.appendChild(bulkMessage);
+
+    // -------- OPTION 1: QUICK UPLOAD --------
+    document.getElementById("pdfUpload").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (file && file.name.toLowerCase().endsWith(".pdf")) handleQuickUpload(file);
+      else alert("Please upload a PDF file.");
+    });
+
+    async function handleQuickUpload(file) {
+      messageBox.innerHTML = `<p>Uploading <strong>${file.name}</strong> for parsing...</p>`;
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch(`${API_BASE}/resume/upload_resume`, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + getToken() },
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          messageBox.innerHTML += `<p><strong>${file.name}</strong> uploaded and processed successfully.</p>`;
+        } else {
+          messageBox.innerHTML += `<p><strong>${file.name}</strong> could not be processed. ${data.detail || "Unexpected error during upload."}</p>`;
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        messageBox.innerHTML += `<p>Server error occurred while uploading <strong>${file.name}</strong>. Please try again.</p>`;
+      }
+    }
+
+
+    // -------- OPTION 2: BULK UPLOAD + PROCESS ALL --------
+    document.getElementById("bulkUpload").addEventListener("change", async e => {
+      const files = e.target.files;
+      if (!files.length) return;
+
+      bulkMessage.innerHTML = `<p>Uploading ${files.length} file(s) to S3...</p>`;
+      for (const file of files) {
+        if (!file.name.toLowerCase().endsWith(".pdf")) continue;
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+          const res = await fetch(`${API_BASE}/resume/upload_resume_s3`, {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + getToken() },
+            body: formData
+          });
+          const data = await res.json();
+          if (res.ok)
+            bulkMessage.innerHTML += `<p>${file.name} uploaded to S3 successfully.</p>`;
+          else
+            bulkMessage.innerHTML += `<p>Failed to upload ${file.name}: ${data.detail || "Unknown error."}</p>`;
+        } catch {
+          bulkMessage.innerHTML += `<p>Error uploading ${file.name}.</p>`;
+        }
+      }
+
+      bulkMessage.innerHTML += `<p>Processing uploaded resumes...</p>`;
+      try {
+        const processRes = await fetch(`${API_BASE}/resume/process_all`, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + getToken() },
+        });
+        const processData = await processRes.json();
+if (processRes.ok)
+  bulkMessage.innerHTML += `<p>${processData.processed} resumes processed successfully.</p>`;
+else
+  bulkMessage.innerHTML += `<p>Bulk processing failed. ${processData.detail || ""}</p>`;
+
+      } catch {
+        bulkMessage.innerHTML += `<p>Bulk processing failed due to a error.</p>`;
+      }
+    });
+    const csvUploadBtn = document.getElementById("uploadCsvBtn");
+    const csvStatus = document.getElementById("csvStatus");
+
+    csvUploadBtn.addEventListener("click", async () => {
+      const file = document.getElementById("csvUpload").files[0];
+      if (!file) return alert("Please select a CSV file first!");
+
+      csvStatus.textContent = `📤 Uploading ${file.name}...`;
+      csvStatus.style.color = "#4facfe";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch(`${API_BASE}/upload_csv_with_embeddings`, {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + getToken() },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          csvStatus.textContent = `✅ Successfully uploaded ${data.inserted_count || 0} candidates!`;
+          csvStatus.style.color = "green";
+        } else {
+          csvStatus.textContent = `❌ Upload failed: ${data.detail || "Unknown error"}`;
+          csvStatus.style.color = "red";
+        }
+      } catch (err) {
+        csvStatus.textContent = `💥 Server error: ${err.message}`;
+        csvStatus.style.color = "red";
+      }
+    });
+
+
+    // Navigation
+    document.getElementById('resultsBtn').addEventListener('click', () => window.location.href = 'hiring_analysis.html');
+    document.getElementById('scheduleBtn').addEventListener('click', () => window.location.href = 'interview_schedule.html');
+    document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'userdash.html');
+  </script>
+</body>
+</html>

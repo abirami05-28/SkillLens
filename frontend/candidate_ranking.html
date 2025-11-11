@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkillLens - Candidate Ranking</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    :root {
+      --primary:#4facfe;
+      --secondary:#2c3e50;
+      --light-bg:#f8f9fc;
+      --card-bg:#fff;
+      --text-dark:#2c3e50;
+      --text-light:#777;
+    }
+    * {margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif;}
+    body {background: var(--light-bg); color: var(--text-dark); overflow-x:hidden;}
+    nav {position: fixed; top:0; left:0; right:0; height:60px; display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.85); padding:0 25px; z-index:1000; box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+    .nav-left {display:flex; align-items:center; gap:20px;}
+    .nav-links {display:flex; gap:20px;}
+    nav a {color:white; text-decoration:none; font-size:15px; transition:color .25s;}
+    nav a:hover {color: var(--primary);}
+    #userEmail {color: var(--primary); font-weight:600;}
+    .menu-toggle {font-size:22px; color:white; cursor:pointer; padding:6px 10px; border-radius:6px; transition: background .18s;}
+    .menu-toggle:hover {background: rgba(255,255,255,0.1);}
+    .sidebar {position: fixed; top:60px; left:0; height: calc(100% - 60px); width:0; background: var(--secondary); transition: width .28s; overflow-x:hidden; z-index:900; display:flex; flex-direction:column;}
+    .sidebar.expanded {width:220px;}
+    .sidebar a {display:flex; align-items:center; padding:14px 18px; color:white; text-decoration:none; gap:12px; white-space:nowrap; transition: background .2s, transform .2s;}
+    .sidebar a:hover {background:#34495e; transform: translateX(5px);}
+    .content {margin-left:0; margin-top:60px; padding:20px; transition: margin-left .28s; display:flex; gap:20px;}
+    .sidebar.expanded ~ .content {margin-left:230px;}
+    .filter-panel {background: var(--card-bg); padding:20px; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,0.08); width:300px; flex-shrink:0; display:flex; flex-direction: column; gap:15px; height: calc(100vh - 80px); overflow-y: auto;}
+    .filter-panel h2 {text-align:center; color: var(--primary); margin-bottom:20px;}
+    .filter-group {display:flex; flex-direction: column;}
+    .filter-group label {font-weight:600; margin-bottom:6px;}
+    .filter-group input {padding:10px; border:1px solid #ccc; border-radius:8px; font-size:1rem;}
+    .filter-actions {display:flex; gap:10px; margin-top:20px;}
+    .filter-actions button {flex:1; padding:12px; font-size:1rem; font-weight:600; border:none; border-radius:8px; cursor:pointer; color:white; background: var(--primary); transition: background .18s;}
+    .filter-actions button:hover {background: #00c6ff;}
+    .table-panel {flex:1; background: var(--card-bg); padding:20px; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,0.08); overflow-x:auto; overflow-y:auto; height: calc(100vh - 80px);}
+    table {
+      min-width: 800px; /* Ensures scroll shows up when content overflows */
+    }
+    .table-panel h3 {margin-bottom:20px; color: var(--primary); text-align:center;}
+    table {width:100%; border-collapse: collapse;}
+    th, td {padding:12px; border-bottom: 1px solid #ddd; text-align:left;}
+    th {background: var(--primary); color: white; font-weight:600;}
+    tr:hover {background:#f0f0f0;}
+    /* Make the Skills column wrap properly */
+td:nth-child(3) {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 300px;
+}
+
+    .muted { color: var(--text-light); font-size:0.95rem; }
+
+    .decision-btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 8px;
+      margin: 2px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .shortlist { background-color: #00c6ff; }
+    .hire { background-color: #4caf50; }
+    .reject { background-color: #f44336; }
+    .decision-btn:hover { opacity: 0.85; }
+
+  </style>
+</head>
+<body>
+
+  <!-- ✅ NAVBAR -->
+  <nav>
+    <div class="nav-left">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div class="nav-links">
+        <a href="index2.html#home">Home</a>
+        <a href="index2.html#about">About</a>
+        <a href="index2.html#modules">Features</a>
+        <a href="index2.html#faqs">FAQs</a>
+        <a href="index2.html#contact">Contact</a>
+      </div>
+    </div>
+    <div id="userEmail">Loading...</div>
+  </nav>
+
+  <!-- ✅ SIDEBAR -->
+  <div class="sidebar" id="sidebar" aria-hidden="true">
+    <a href="resume_parse.html">Resume Parsing</a>
+    <a href="hiring_analysis.html">Hiring Analysis</a>
+    <a href="candidate_ranking.html">Candidate Ranking</a>
+    <a href="interview_schedule.html">Interview Scheduler</a>
+    <a href="my_acc.html">My Account</a>
+  </div>
+
+  <!-- ✅ MAIN CONTENT -->
+  <div class="content">
+    <div class="filter-panel">
+      <h2>Filter Candidates</h2>
+      <div class="filter-group">
+        <label>Job ID</label>
+        <input type="text" id="jobId" placeholder="Enter Job ID">
+      </div>
+      <div class="filter-actions">
+        <button id="loadBtn">Load Rankings</button>
+      </div>
+      <div class="muted" style="margin-top:12px; text-align:center;">
+        Enter the Job ID and click <b>Load Rankings</b> to fetch top candidates from backend.
+      </div>
+    </div>
+
+    <div class="table-panel">
+      <h3>Candidate Ranking Results</h3>
+      <table id="rankingTable">
+  <thead>
+    <tr>
+      <th>Candidate Name</th>
+      <th>Score</th>
+      <th>Skills</th>
+      <th>Recruiter Decision / Actions</th>
+    </tr>
+  </thead>
+
+        <tbody>
+          <tr><td colspan="4" style="text-align:center;color:gray;">No data loaded yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ✅ JS Imports -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('menuToggle');
+    toggle.addEventListener('click', () => {
+      const expanded = sidebar.classList.toggle('expanded');
+      sidebar.setAttribute('aria-hidden', !expanded);
+      toggle.textContent = expanded ? '✕' : '☰';
+    });
+
+    // Display user name/email
+    async function loadUser() {
+      const token = getToken();
+      const userEl = document.getElementById("userEmail");
+      if (!token) {
+        userEl.textContent = "Guest";
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+        const data = await res.json();
+        userEl.textContent = data.user?.username || data.user?.email || "User";
+      } catch {
+        userEl.textContent = "User";
+      }
+    }
+    loadUser();
+
+    // Escape HTML safely
+    function escapeHtml(str) {
+      if (!str && str !== 0) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Format scores nicely
+    function formatScore(score) {
+      if (score == null || isNaN(score)) return "-";
+      return Number(score).toFixed(3);
+    }
+
+    // ✅ Core function: Fetch ranking from backend
+    async function loadRanking() {
+      const jobId = document.getElementById("jobId").value.trim();
+      const tbody = document.querySelector("#rankingTable tbody");
+
+      if (!jobId) {
+        alert("Please enter a Job ID first!");
+        return;
+      }
+
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:gray;'>Loading...</td></tr>";
+
+      try {
+        const res = await fetch(`${API_BASE}/match_job/${encodeURIComponent(jobId)}`, {
+          headers: authHeaders(),
+        });
+        if (!res.ok) throw new Error("Failed to fetch ranking data");
+        const data = await res.json();
+        const results = data.top_k || [];
+
+        if (!results.length) {
+          tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:gray;'>No candidates found for this Job ID</td></tr>";
+          return;
+        }
+
+        tbody.innerHTML = "";
+        results.forEach(c => {
+          const name = escapeHtml(c.name || "Unknown");
+          const score = formatScore(c.score);
+          const skills = Array.isArray(c.skills)
+            ? escapeHtml(c.skills.join(", "))
+            : escapeHtml(c.skills || "");
+          const candidateId = c.candidate_id || c._id || c.id;
+
+          const decision = c.recruiter_decision
+            ? `<span style="font-weight:600; color:${
+                c.recruiter_decision === "hired"
+                  ? "#4caf50"
+                  : c.recruiter_decision === "rejected"
+                  ? "#f44336"
+                  : "#00c6ff"
+              }">[${c.recruiter_decision.toUpperCase()}]</span>`
+            : `
+              <button class="decision-btn shortlist" onclick="updateDecision('${candidateId}', 'shortlisted')">Shortlist</button>
+              <button class="decision-btn hire" onclick="updateDecision('${candidateId}', 'hired')">Hire</button>
+              <button class="decision-btn reject" onclick="updateDecision('${candidateId}', 'rejected')">Reject</button>
+            `;
+
+          const row = `
+            <tr>
+              <td>${name}</td>
+              <td>${score}</td>
+              <td>${skills}</td>
+              <td>${decision}</td>
+            </tr>`;
+
+          tbody.insertAdjacentHTML("beforeend", row);
+        });
+
+
+      } catch (err) {
+        console.error("Error loading ranking:", err);
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:red;'>Error loading data</td></tr>";
+      }
+    }
+    async function updateDecision(candidateId, decision) {
+      try {
+        const res = await fetch(`${API_BASE}/update_decision/${candidateId}`, {
+          method: "POST",
+          headers: { 
+            "Authorization": "Bearer " + getToken(),
+            "Content-Type": "application/json" 
+          },
+          body: JSON.stringify({ recruiter_decision: decision })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to update decision");
+
+        alert(`✅ Decision updated: ${decision.toUpperCase()}`);
+
+        // Auto-redirect for shortlist
+        if (decision === "shortlisted") {
+          // ✅ Get candidate name safely from the table
+          const candidateRow = document.querySelector(`[onclick*="${candidateId}"]`)?.closest("tr");
+          const candidateName = candidateRow?.children[0]?.textContent?.trim() || "Unknown";
+
+          // ✅ Save candidate info
+          localStorage.setItem("selected_candidate_id", candidateId);
+          localStorage.setItem("selected_candidate_name", candidateName);
+
+          // ✅ Save ranking page state
+          const filters = {
+            sortBy: document.getElementById("sortSelect")?.value || "",
+            searchTerm: document.getElementById("searchInput")?.value || "",
+            scrollY: window.scrollY,
+          };
+          localStorage.setItem("ranking_state", JSON.stringify(filters));
+
+          // ✅ Navigate to the interview scheduler
+          window.location.href = "interview_schedule.html";
+        } else {
+          // Refresh table after hire/reject
+          loadRanking();
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("❌ " + err.message);
+      }
+    }
+
+    document.getElementById("loadBtn").addEventListener("click", loadRanking);
+    document.getElementById("jobId").addEventListener("keydown", e => {
+      if (e.key === "Enter") loadRanking();
+    });
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedState = localStorage.getItem("ranking_state");
+      if (savedState) {
+        const { sortBy, searchTerm, scrollY } = JSON.parse(savedState);
+        if (sortBy) document.getElementById("sortSelect").value = sortBy;
+        if (searchTerm) document.getElementById("searchInput").value = searchTerm;
+
+        // Reapply filters or reload candidates
+        applyFilters();
+
+        // Restore scroll position after slight delay (so page content loads)
+        setTimeout(() => window.scrollTo(0, scrollY || 0), 300);
+      }
+    });
+
+  </script>
+</body>
+</html>

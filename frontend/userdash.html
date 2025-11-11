@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkillLens - Dashboard</title>
+  <style>
+    :root {
+      --primary:#4facfe;
+      --secondary:#2c3e50;
+      --light-bg:#f8f9fc;
+      --card-bg:#fff;
+      --text-dark:#2c3e50;
+      --text-light:#777;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif }
+    body { background:var(--light-bg); color:var(--text-dark); overflow:hidden }
+
+    /* NAVBAR */
+    nav {
+      position:fixed; top:0; left:0; right:0; height:60px;
+      display:flex; justify-content:space-between; align-items:center;
+      background:rgba(0,0,0,0.85); padding:15px 20px; z-index:1000;
+    }
+    .nav-left { display:flex; align-items:center; gap:20px }
+    .nav-links { display:flex; gap:20px }
+    nav a { color:white; text-decoration:none; font-size:15px; transition:color .25s }
+    nav a:hover { color:var(--primary) }
+    #userEmail { color:var(--primary); font-weight:600 }
+
+    /* HAMBURGER */
+    .menu-toggle {
+      font-size:22px; color:white; cursor:pointer; padding:6px 10px; border-radius:6px;
+      transition:background .18s;
+    }
+    .menu-toggle:hover { background:rgba(255,255,255,0.06) }
+
+    /* SIDEBAR */
+    .sidebar {
+      position:fixed; top:60px; left:0; height:calc(100% - 60px);
+      width:0; background:var(--secondary); transition:width .28s; overflow-x:hidden; z-index:900;
+    }
+    .sidebar.expanded { width:220px }
+    .sidebar a {
+      display:flex; align-items:center; padding:14px 18px; color:white; text-decoration:none;
+      gap:12px; white-space:nowrap; transition:background .18s
+    }
+    .sidebar a:hover { background:#34495e }
+
+    /* CONTENT AREA */
+    .content {
+      margin-left:0; margin-top:60px;
+      height:calc(100vh - 60px); padding:20px 30px;
+      transition:margin-left .28s;
+      display:grid; grid-template-rows:auto auto 1fr; gap:20px;
+    }
+    .sidebar.expanded ~ .content { margin-left:230px }
+
+    /* WELCOME */
+    .welcome {
+      font-size:1.8rem; font-weight:600; padding:18px; border-radius:12px;
+      background:linear-gradient(135deg,var(--primary),#00c6ff); color:white;
+      box-shadow:0 6px 20px rgba(0,0,0,0.08)
+    }
+    .welcome span { color:#ffe082 }
+
+    /* STATS */
+    .stats {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:18px;
+    }
+    .card {
+      background:var(--card-bg); padding:14px; border-radius:12px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.08); text-align:center; transition:transform .16s;
+    }
+    .card:hover { transform:translateY(-5px) }
+    .card h2 { color:var(--primary); font-size:1.8rem; margin-bottom:6px }
+
+    /* BOTTOM AREA */
+    .dashboard-bottom {
+      display:grid; grid-template-columns:1fr 2fr; gap:20px; min-height:0;
+    }
+    .recent-activity, .calendar-section {
+      background:var(--card-bg); padding:18px; border-radius:12px;
+      box-shadow:0 4px 16px rgba(0,0,0,0.08); overflow:auto;
+    }
+
+    .timeline {
+      list-style:none; position:relative; padding-left:25px;
+    }
+    .timeline::before {
+      content:""; position:absolute; left:15px; top:0; bottom:0;
+      width:2px; background:var(--primary);
+    }
+    .timeline li {
+      position:relative; margin:12px 0; padding-left:15px; color:var(--text-light);
+    }
+    .timeline li::before {
+      content:""; position:absolute; left:-15px; top:6px;
+      width:12px; height:12px; border-radius:50%; background:var(--primary);
+      box-shadow:0 0 0 4px rgba(79,172,254,0.15);
+    }
+
+    .calendar-section { display:grid; grid-template-columns:0.8fr 2fr; gap:16px }
+    .calendar-grid {
+      display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:10px;
+    }
+    .calendar-day {
+      padding:8px; background:#f0f0f0; border-radius:6px; text-align:center; cursor:pointer;
+      transition:background .18s,transform .12s; font-size:.88rem;
+    }
+    .calendar-day:hover { background:var(--primary); color:white; transform:scale(1.03) }
+    .calendar-day.has-event { background:#dfe6e9; border:2px solid var(--primary) }
+
+    .interview-details .item {
+      display:flex; align-items:center; gap:12px; padding:10px; border-radius:8px; margin-bottom:10px;
+      background:linear-gradient(180deg,#ffffff,#fbfdff); box-shadow:0 2px 8px rgba(0,0,0,0.04)
+    }
+    .avatar {
+      width:44px; height:44px; border-radius:50%; background:#e9f5ff; border:2px solid var(--primary);
+      display:inline-flex; align-items:center; justify-content:center; font-weight:600; color:var(--primary);
+    }
+    .item .meta { display:flex; flex-direction:column }
+    .item .meta .name { font-weight:600 }
+    .item .meta .role { font-size:.92rem; color:var(--text-light) }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-left">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div class="nav-links">
+        <a href="index2.html#home">Home</a>
+        <a href="index2.html#about">About Us</a>
+        <a href="index2.html#modules">Features</a>
+        <a href="index2.html#faqs">FAQs</a>
+        <a href="index2.html#contact">Contact Us</a>
+      </div>
+    </div>
+    <div id="userEmail">Loading...</div>
+  </nav>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar" aria-hidden="true">
+    <a href="resume_parse.html"><span>Resume Parsing</span></a>
+    <a href="hiring_analysis.html"><span>Hiring Analysis</span></a>
+    <a href="candidate_ranking.html"><span>Candidate Ranking</span></a>
+    <a href="interview_schedule.html"><span>Interview Scheduler</span></a>
+    <a href="my_acc.html"><span>My Account</span></a>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content" id="content">
+    <div class="welcome">Welcome back, <span id="username">User</span> 👋</div>
+
+    <div class="stats">
+      <div class="card"><h2 id="candidates">0</h2><p>Candidates</p></div>
+      <div class="card"><h2 id="shortlisted">0</h2><p>Shortlisted</p></div>
+      <div class="card"><h2 id="jobs">0</h2><p>Jobs</p></div>
+      <div class="card"><h2 id="interviews">0</h2><p>Interviews Scheduled</p></div>
+    </div>
+
+    <div class="dashboard-bottom">
+      <div class="recent-activity">
+        <h3>Recent Activity</h3>
+        <ul class="timeline" id="activityLog"></ul>
+      </div>
+
+      <div class="calendar-section">
+        <div class="calendar">
+          <h3>Interview Calendar</h3>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+        <div class="interview-details" id="interviewDetails">
+          <h3>Interview Details</h3>
+          <p>Select a date to view scheduled interviews.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ JS imports -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('menuToggle');
+    toggle.addEventListener('click', () => {
+      const expanded = sidebar.classList.toggle('expanded');
+      sidebar.setAttribute('aria-hidden', !expanded);
+      toggle.textContent = expanded ? '✕' : '☰';
+    });
+
+    // 🌟 Load logged-in user
+    async function loadUserDashboard() {
+      const token = localStorage.getItem("token");
+      const usernameElem = document.getElementById("username");
+      const userEmailElem = document.getElementById("userEmail");
+
+      if (!token) {
+        usernameElem.textContent = "Guest";
+        userEmailElem.textContent = "Not logged in";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+        const data = await res.json();
+
+        if (res.ok && data.user) {
+          usernameElem.textContent = data.user.username || "User";
+          userEmailElem.textContent = data.user.email || "";
+        } else {
+          usernameElem.textContent = "Guest";
+          userEmailElem.textContent = "Not logged in";
+        }
+      } catch (err) {
+        console.error("Error fetching user info:", err);
+        usernameElem.textContent = "Guest";
+        userEmailElem.textContent = "Not logged in";
+      }
+    }
+
+    // 📊 Load funnel stats
+    async function loadFunnelStats() {
+      try {
+        const res = await fetch(`${API_BASE}/analytics/funnel`);
+        const data = await res.json();
+
+        document.getElementById("candidates").textContent = data.total || 0;
+        document.getElementById("shortlisted").textContent = data.shortlisted || 0;
+        document.getElementById("jobs").textContent = data.screened || 0;
+        document.getElementById("interviews").textContent = data.hired || 0;
+      } catch (err) {
+        console.error("Error loading analytics:", err);
+      }
+    }
+
+    // 🕒 Demo activities
+    const activity = [
+      { title:'Added 5 new candidates', meta:'2 hours ago' },
+      { title:'Shortlisted 2 candidates', meta:'Yesterday' },
+      { title:'Scheduled interview with John Doe', meta:'3 days ago' },
+      { title:'Job posting: Software Engineer created', meta:'1 week ago' }
+    ];
+    const log = document.getElementById('activityLog');
+    activity.forEach(a => {
+      const li = document.createElement('li');
+      li.innerHTML = `<div class="event-title">${a.title}</div><div class="event-meta">${a.meta}</div>`;
+      log.appendChild(li);
+    });
+
+    // 📅 Mini calendar
+    const cal = document.getElementById("calendarGrid");
+    const details = document.getElementById("interviewDetails");
+    // ✅ Fetch real interviews from backend
+    async function loadInterviews() {
+      try {
+        const res = await fetch(`${API_BASE}/calendar/get_interviews`, {
+          headers: authHeaders()
+        });
+        if (!res.ok) throw new Error("Failed to load interviews");
+        const data = await res.json();
+        const interviews = data.interviews || [];
+
+        // Group by date (like a mini map)
+        const grouped = {};
+        interviews.forEach(i => {
+          const date = i.date;
+          grouped[date] = grouped[date] || [];
+          grouped[date].push({
+            name: i.candidate_name || "Candidate",
+            time: `${i.start_time} - ${i.end_time}`,
+            event_link: i.event_link || ""
+          });
+        });
+
+        renderCalendar(grouped);
+      } catch (err) {
+        console.error("Error loading interviews:", err);
+      }
+    }
+
+    const today = new Date();
+    const month = today.toLocaleString("default", { month: "long" });
+    const year = today.getFullYear();
+    document.querySelector(".calendar h3").textContent = `${month} ${year}`;
+    // Render the calendar dynamically based on real interviews
+    function renderCalendar(grouped) {
+      cal.innerHTML = "";
+      const daysInMonth = new Date(year, today.getMonth() + 1, 0).getDate();
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const day = document.createElement("div");
+        day.className = "calendar-day";
+        day.textContent = d;
+
+        // Format date as YYYY-MM-DD to match MongoDB
+        const dateKey = `${year}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+        if (grouped[dateKey]) {
+          day.classList.add("has-event");
+          day.onclick = () => showInterviewsForDate(dateKey, grouped[dateKey]);
+        } else {
+          day.onclick = () => showInterviewsForDate(dateKey, []);
+        }
+
+        cal.appendChild(day);
+      }
+    }
+
+    // Display interviews for selected date
+    function showInterviewsForDate(date, list) {
+      const readableDate = new Date(date).toLocaleDateString("en-US", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+      details.innerHTML = `<h3>Interview Details - ${readableDate}</h3>`;
+
+      if (!list.length) {
+        details.insertAdjacentHTML("beforeend", "<p>No interviews scheduled.</p>");
+        return;
+      }
+
+      list.forEach(k => {
+        const item = document.createElement("div");
+        item.className = "item";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = k.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.innerHTML = `<div class="name">${k.name}</div><div class="role">${k.time}</div>`;
+
+        if (k.event_link) {
+          const link = document.createElement("a");
+          link.href = k.event_link;
+          link.target = "_blank";
+          link.textContent = "Open Calendar";
+          link.style.marginLeft = "8px";
+          meta.appendChild(link);
+        }
+
+        item.appendChild(avatar);
+        item.appendChild(meta);
+        details.appendChild(item);
+      });
+    }
+
+    // 🚀 Initialize
+    loadUserDashboard();
+    loadFunnelStats();
+    loadInterviews();
+  </script>
+</body>
+</html>

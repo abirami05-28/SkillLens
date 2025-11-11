@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SkillLens - Interview Scheduler</title>
+<style>
+:root {
+  --primary:#4facfe;
+  --secondary:#2c3e50;
+  --accent:#ff8c42;
+  --success:#2ecc71;
+  --danger:#120503;
+  --light-bg:#f8f9fc;
+  --card-bg:#fff;
+  --text-dark:#2c3e50;
+  --text-light:#777;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+body{background: var(--light-bg); color: var(--text-dark); overflow-x:hidden;}
+
+/* NAVBAR */
+nav{
+  position:fixed; top:0; left:0; right:0; height:60px;
+  display:flex; justify-content:space-between; align-items:center;
+  background:rgba(0,0,0,0.85); padding:0 25px; z-index:1000;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+.nav-left{display:flex; align-items:center; gap:20px;}
+.nav-links{display:flex; gap:20px;}
+nav a{color:white; text-decoration:none; font-size:15px; transition:color .25s;}
+nav a:hover{color: var(--primary);}
+#userName{color: var(--primary); font-weight:600;}
+.menu-toggle{font-size:22px; color:white; cursor:pointer; padding:6px 10px; border-radius:6px; transition:background .18s;}
+.menu-toggle:hover{background: rgba(255,255,255,0.1);}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed; top:60px; left:0; height:calc(100% - 60px);
+  width:0; background: var(--secondary); transition: width .28s; overflow-x:hidden; z-index:900;
+  display:flex; flex-direction:column;
+}
+.sidebar.expanded{width:220px;}
+.sidebar a{
+  display:flex; align-items:center; padding:14px 18px; color:white; text-decoration:none;
+  gap:12px; white-space:nowrap; transition: background .2s, transform .2s;
+}
+.sidebar a:hover{background:#34495e; transform: translateX(5px);}
+
+/* MAIN CONTENT */
+.content{
+  margin-left:0; margin-top:60px; padding:20px; transition: margin-left .28s;
+  display:flex; gap:20px; height:calc(100vh - 60px);
+}
+.sidebar.expanded ~ .content{margin-left:230px;}
+
+/* CALENDAR */
+.calendar {
+  flex:1; background: var(--primary); border-radius:12px; padding:20px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15); display:flex; flex-direction:column; overflow-y:auto;
+  color:white;
+}
+.calendar h3{text-align:center; margin-bottom:15px; font-weight:600;}
+.calendar-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+.calendar-day{
+  padding:10px; text-align:center; border-radius:6px; cursor:pointer; transition:background .2s, transform .12s; font-size:.9rem;
+  background:rgba(255,255,255,0.2);
+}
+.calendar-day:hover{background: rgba(255,255,255,0.45); transform:scale(1.05);}
+.calendar-day.today{background:white; color:var(--primary); font-weight:700;}
+.calendar-day.has-event{border:2px solid var(--accent); font-weight:600;}
+.calendar-day.selected{border:2px solid var(--danger) !important;}
+
+/* EVENT SECTION */
+/*.event-section{
+  flex:1; display:flex; flex-direction:column; gap:20px;
+}*/
+.event-section{
+  flex:1.5;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.event-list{
+  flex:2;
+  background: var(--card-bg);
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.1);
+  overflow-y:auto;
+  font-size:0.95rem;
+}
+
+.event-item{
+  padding:14px; margin-bottom:12px; background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.05);
+  display:flex; justify-content:space-between; align-items:center;
+  gap:12px;
+}
+.avatar{
+  width:40px; height:40px; border-radius:50%; background:#e9f5ff; border:2px solid var(--primary);
+  display:inline-flex; align-items:center; justify-content:center; font-weight:600; color:var(--primary);
+  flex-shrink:0;
+}
+.event-meta{flex:1; display:flex; flex-direction:column; gap:2px;}
+.event-meta .name{font-weight:600; color:var(--text-dark);}
+.event-meta .time{font-size:.88rem; color:var(--text-light);}
+
+/* ACTION ICONS */
+.event-actions{
+  display:flex; gap:10px;
+}
+.event-actions button{
+  border:none; background:none; cursor:pointer; font-size:1.2rem; transition: transform .12s;
+}
+.event-actions button:hover{transform:scale(1.2);}
+.event-actions .done{color: var(--success);}
+.event-actions .delete{color: var(--danger);}
+
+/* SCHEDULE FORM */
+.schedule-form{
+  background: var(--card-bg); border-radius:12px; padding:15px; box-shadow:0 6px 20px rgba(0,0,0,0.08);
+  display:flex; flex-direction:column; gap:12px;
+}
+.schedule-form input, .schedule-form button{
+  padding:10px; border-radius:6px; border:1px solid #ccc; font-size:.95rem;
+}
+.schedule-form button{
+  background: var(--primary); color:white; font-weight:600; border:none; cursor:pointer;
+  transition:background .2s, transform .12s;
+}
+.schedule-form button:hover{background:#00c6ff; transform:scale(1.03);}
+
+/* GO BACK BUTTON */
+#backBtn{
+  margin-top:10px; background:#777; color:white;
+  width:100px; align-self:flex-start;
+  transition:background .2s, transform .12s;
+}
+#backBtn:hover{background:#555; transform:scale(1.03);}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-left">
+    <div class="menu-toggle" id="menuToggle">☰</div>
+    <div class="nav-links">
+      <a href="index2.html#home">Home</a>
+      <a href="index2.html#about">About Us</a>
+      <a href="index2.html#modules">Features</a>
+      <a href="index2.html#faqs">FAQs</a>
+      <a href="index2.html#contact">Contact Us</a>
+    </div>
+  </div>
+  <div id="userName">Loading...</div>
+</nav>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar" aria-hidden="true">
+  <a href="resume_parse.html"><span>Resume Parsing</span></a>
+  <a href="hiring_analysis.html"><span>Hiring Analysis</span></a>
+  <a href="candidate_ranking.html"><span>Candidate Ranking</span></a>
+  <a href="interview_schedule.html"><span>Interview Scheduler</span></a>
+  <a href="my_acc.html"><span>My Account</span></a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+  <!-- Calendar -->
+  <div class="calendar">
+    <h3 id="calendarTitle">September 2025</h3>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+  <!-- Event Section -->
+  <div class="event-section">
+    <h3>Scheduled Interviews</h3>
+    <div class="event-list" id="eventList">
+      <p>Select a date to view interviews</p>
+    </div>
+
+    <!-- Schedule Form -->
+    <div class="schedule-form">
+      <h3>Schedule Interview</h3>
+      <input type="date" id="interviewDate" required readonly>
+      <input type="text" id="candidateName" placeholder="Candidate Name" required>
+      <input type="hidden" id="candidateId">
+      <input type="time" id="fromTime" required>
+      <input type="time" id="toTime" required>
+      <button id="scheduleBtn">Schedule</button>
+      <button id="backBtn">Go Back</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+/* --- integrated full logic --- */
+const sidebar=document.getElementById('sidebar'),toggle=document.getElementById('menuToggle');
+toggle.addEventListener('click',()=>{const e=sidebar.classList.toggle('expanded');sidebar.setAttribute('aria-hidden',!e),toggle.textContent=e?'✕':'☰'});
+const grid=document.getElementById('calendarGrid'),title=document.getElementById('calendarTitle'),list=document.getElementById('eventList'),dateInput=document.getElementById('interviewDate'),connectBtn=document.getElementById('connectGoogleBtn'),connectStatus=document.getElementById('connectStatus'),scheduleBtn=document.getElementById('scheduleBtn'),candidate=document.getElementById('candidateName'),from=document.getElementById('fromTime'),to=document.getElementById('toTime'),back=document.getElementById('backBtn');
+let today=new Date,month=today.getMonth(),year=today.getFullYear(),months=["January","February","March","April","May","June","July","August","September","October","November","December"],events={},user=null;
+async function fetchUser(){if(!getToken())return null;const e=await fetch(`${API_BASE}/auth/me`,{headers:authHeaders()});if(!e.ok)return null;const t=await e.json(),a=t.user||t;return{email:a.email||a.username,username:a.username||a.email?.split("@")[0]||"User"}}
+function genCal(t,a){grid.innerHTML="",title.textContent=`${months[t]} ${a}`;const e=new Date(a,t,1).getDay(),n=new Date(a,t+1,0).getDate(),o=(e+6)%7;for(let e=0;e<o;e++){const e=document.createElement("div");grid.appendChild(e)}for(let e=1;e<=n;e++){const n=document.createElement("div");n.className="calendar-day";const o=`${a}-${String(t+1).padStart(2,"0")}-${String(e).padStart(2,"0")}`;n.textContent=e,e===today.getDate()&&t===today.getMonth()&&a===today.getFullYear()&&n.classList.add("today"),events[o]&&n.classList.add("has-event"),n.onclick=()=>{document.querySelector(".calendar-day.selected")?.classList.remove("selected"),n.classList.add("selected"),dateInput.value=o,show(o)},grid.appendChild(n)}}
+function show(e) {
+  const t = events[e] || [];
+  list.innerHTML = "";
+  if (t.length === 0) {
+    list.innerHTML = "<p>No interviews scheduled.</p>";
+    return;
+  }
+
+  t.forEach((t, n) => {
+    const o = document.createElement("div");
+    o.className = "event-item";
+
+    const c = document.createElement("div");
+    c.className = "avatar";
+    c.textContent = t.name
+      .split(" ")
+      .map((e) => e[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+
+    const s = document.createElement("div");
+    s.className = "event-meta";
+    s.innerHTML = `<div class="name">${t.name}</div><div class="time">${t.from} - ${t.to}</div>`;
+
+    const i = document.createElement("div");
+    i.className = "event-actions";
+
+    const r = document.createElement("button");
+    r.textContent = "✔";
+    r.className = "done";
+    r.style.color = "#000";
+    r.onclick = () => {
+      t.done = true;
+      show(e);
+    };
+
+    const d = document.createElement("button");
+    d.textContent = "✖";
+    d.className = "delete";
+    d.style.color = "#000";
+    d.onclick = () => {
+      events[e].splice(n, 1);
+      show(e);
+      genCal(month, year);
+    };
+
+    i.append(r, d);
+
+    if (t.done) {
+      s.style.textDecoration = "line-through";
+      s.style.color = "gray";
+    }
+
+    o.append(c, s, i);
+
+    if (t.event_link) {
+      const link = document.createElement("a");
+      link.href = t.event_link;
+      link.target = "_blank";
+      link.style.marginLeft = "8px";
+      link.textContent = "Open in Calendar";
+      o.appendChild(link);
+    }
+
+    list.appendChild(o);
+  });
+}
+// ✅ Load interviews from backend (MongoDB)
+async function loadInterviews() {
+  try {
+    const res = await fetch(`${API_BASE}/calendar/get_interviews`, {
+      headers: authHeaders()
+    });
+    if (!res.ok) throw new Error("Failed to fetch interviews");
+    const data = await res.json();
+    const all = data.interviews || [];
+
+    // Group interviews by date
+    all.forEach((i) => {
+      const date = i.date;
+      events[date] = events[date] || [];
+      events[date].push({
+        name: i.candidate_name || "Candidate",
+        from: i.start_time,
+        to: i.end_time,
+        done: false,
+        event_link: i.event_link || ""
+      });
+    });
+
+    genCal(month, year);
+  } catch (err) {
+    console.error("❌ Error loading interviews:", err);
+  }
+}
+
+scheduleBtn.addEventListener("click", async () => {
+  const date = dateInput.value;
+  const candName = candidate.value.trim();
+  const candId = document.getElementById("candidateId")?.value || localStorage.getItem("selected_candidate_id");
+  const fromTime = from.value;
+  const toTime = to.value;
+
+  if (!date || !candName || !candId || !fromTime || !toTime) {
+    return alert("Please fill all fields (candidate, date, time).");
+  }
+  if (fromTime >= toTime) return alert("Invalid time range.");
+
+  const payload = {
+    candidate_id: candId,
+    recruiter_email: user?.email || "default@skilens.com",
+    date,
+    start_time: fromTime,
+    end_time: toTime,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/calendar/schedule_meeting`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      console.error("Scheduling failed:", data);
+      return alert(`❌ Scheduling failed: ${data.detail || data.message || "Unknown error"}`);
+    }
+
+    const link = data.event_link || "";
+    events[date] = events[date] || [];
+    events[date].push({ name: candName, from: fromTime, to: toTime, done: false, event_link: link });
+    genCal(month, year);
+    show(date);
+    alert(`✅ Interview scheduled for ${candName}!`);
+  } catch (err) {
+    console.error("Error scheduling:", err);
+    alert("❌ Scheduling failed. Check console for details.");
+  }
+});
+back.addEventListener("click", () => {
+  window.location.href = "candidate_ranking.html";
+});
+(async () => {
+  user = await fetchUser();
+  document.getElementById("userName").textContent = user?.username || user?.email || "Guest";
+  await loadInterviews(); // ✅ Load stored interviews from MongoDB
+})();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const candName = localStorage.getItem("selected_candidate_name");
+  const candId = localStorage.getItem("selected_candidate_id");
+
+  if (candName) {
+    const nameInput = document.getElementById("candidateName");
+    if (nameInput) nameInput.value = candName;
+  }
+
+  if (candId) {
+    const idInput = document.getElementById("candidateId");
+    if (idInput) idInput.value = candId;
+  }
+});
+</script>
+</body>
+</html>

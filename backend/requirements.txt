@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+motor
+pymongo
+python-dotenv
+numpy
+pandas
+scikit-learn
+bcrypt
+pyjwt
+aiofiles
+aif360
+boto3
+python-multipart

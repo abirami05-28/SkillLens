@@ -1,0 +1,31 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache and temp
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env files and credentials
+.env
+backend/.env
+backend/credentials.json
+backend/google_tokens.json
+
+# Model files
+backend/models/
+*.pkl
+
+# Node/Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

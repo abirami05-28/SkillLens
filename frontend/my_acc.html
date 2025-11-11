@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillLens - My Account</title>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+
+  <style>
+    :root {
+      --primary:#4facfe;
+      --secondary:#2c3e50;
+      --light-bg:#f8f9fc;
+      --card-bg:#fff;
+      --text-dark:#2c3e50;
+      --text-light:#777;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+    body{background:var(--light-bg);color:var(--text-dark);overflow:hidden}
+    nav{position:fixed;top:0;left:0;right:0;height:60px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,0.85);padding:15px 20px;z-index:1000;}
+    .nav-left{display:flex;align-items:center;gap:20px}
+    .nav-links{display:flex;gap:20px}
+    nav a{color:white;text-decoration:none;font-size:15px;transition:color .25s}
+    nav a:hover{color:var(--primary)}
+    #userEmail{color:var(--primary);font-weight:600}
+    .menu-toggle{font-size:22px;color:white;cursor:pointer;padding:6px 10px;border-radius:6px;transition:background .18s;}
+    .menu-toggle:hover{background:rgba(255,255,255,0.06)}
+    .sidebar{position:fixed;top:60px;left:0;height:calc(100% - 60px);width:0;background:var(--secondary);transition:width .28s;overflow-x:hidden;z-index:900;}
+    .sidebar.expanded{width:220px}
+    .sidebar a{display:flex;align-items:center;padding:14px 18px;color:white;text-decoration:none;gap:12px;white-space:nowrap;transition:background .18s}
+    .sidebar a:hover{background:#34495e}
+    .content{margin-left:0;margin-top:60px;padding:30px;transition:margin-left .28s;display:grid;grid-template-rows:auto auto 1fr;gap:20px;height:calc(100vh - 60px);}
+    .sidebar.expanded ~ .content{margin-left:230px}
+    .welcome{font-size:1.8rem;font-weight:600;padding:18px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#00c6ff);color:white;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+    .welcome span{color:#ffe082}
+    .user-info{display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;}
+    .info-card{flex:1 1 45%;background:var(--card-bg);padding:20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;}
+    .info-card h3{font-size:1.1rem;color:var(--primary)}
+    .info-card p,.info-card input{font-size:1rem;color:var(--text-dark);border:none;outline:none;}
+    .info-card input{border:1px solid #ccc;border-radius:8px;padding:8px;}
+    .button-group{display:flex;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap;gap:10px;}
+    .button-group button{padding:12px 22px;border:none;border-radius:8px;font-size:16px;cursor:pointer;transition:background .3s,transform .12s;background:var(--primary);color:white;}
+    .button-group button:hover{background:#00c6ff;transform:scale(1.05)}
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-left">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div class="nav-links">
+        <a href="index2.html#home">Home</a>
+        <a href="index2.html#about">About Us</a>
+        <a href="index2.html#modules">Features</a>
+        <a href="index2.html#faqs">FAQs</a>
+        <a href="index2.html#contact">Contact</a>
+      </div>
+    </div>
+    <div id="userEmail">Loading...</div>
+  </nav>
+
+  <div class="sidebar" id="sidebar" aria-hidden="true">
+    <a href="resume_parse.html">Resume Parsing</a>
+    <a href="hiring_analysis.html">Hiring Analysis</a>
+    <a href="candidate_ranking.html">Candidate Ranking</a>
+    <a href="interview_schedule.html">Interview Scheduler</a>
+    <a href="my_acc.html">My Account</a>
+  </div>
+
+  <div class="content">
+    <div class="welcome">Welcome back, <span id="username">User</span> 👋</div>
+    <div class="user-info" id="userInfo"></div>
+    <div class="button-group">
+      <button id="editBtn">Edit Info</button>
+      <button id="saveBtn" style="display:none;">Save Changes</button>
+      <button id="signOutBtn">Sign Out</button>
+      <button id="backBtn">Go Back</button>
+    </div>
+  </div>
+
+  <script>
+    // Sidebar toggle
+    const sidebar = document.getElementById("sidebar");
+    document.getElementById("menuToggle").addEventListener("click", () => {
+      const expanded = sidebar.classList.toggle("expanded");
+      sidebar.setAttribute("aria-hidden", !expanded);
+    });
+
+    let currentUser = {};
+
+    // Load user profile
+    async function loadProfile() {
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+        if (!res.ok) {
+          alert("Session expired. Please sign in again.");
+          localStorage.removeItem("token");
+          window.location.href = "signin.html";
+          return;
+        }
+
+        const data = await res.json();
+        const user = data.user;
+        currentUser = user;
+
+        document.getElementById("username").textContent = user.username;
+        document.getElementById("userEmail").textContent = user.email;
+
+        renderProfile({
+          username: user.username || "—",
+          email: user.email || "—",
+          orgname: user.orgname || "—",
+          contact: user.contact || "—",
+          address: user.address || "—"
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load profile.");
+      }
+    }
+
+    // Render user info (view or edit mode)
+    function renderProfile(user, editable = false) {
+      document.getElementById("userInfo").innerHTML = `
+        <div class="info-card"><h3>Email</h3><p>${user.email}</p></div>
+        <div class="info-card"><h3>Username</h3><p>${user.username}</p></div>
+        <div class="info-card"><h3>Organization</h3>${editable ? `<input id="orgInput" value="${user.orgname || ""}"/>` : `<p>${user.orgname || "—"}</p>`}</div>
+        <div class="info-card"><h3>Contact</h3>${editable ? `<input id="contactInput" value="${user.contact || ""}"/>` : `<p>${user.contact || "—"}</p>`}</div>
+        <div class="info-card" style="flex:1 1 100%"><h3>Address</h3>${editable ? `<input id="addressInput" value="${user.address || ""}"/>` : `<p>${user.address || "—"}</p>`}</div>
+      `;
+    }
+
+    // Enable editing
+    document.getElementById("editBtn").addEventListener("click", () => {
+      renderProfile(currentUser, true);
+      document.getElementById("editBtn").style.display = "none";
+      document.getElementById("saveBtn").style.display = "inline-block";
+    });
+
+    // Save updates
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      if (!confirm("Are you sure you want to save these changes?")) return;
+
+      const updatedUser = {
+        orgname: document.getElementById("orgInput").value.trim(),
+        contact: document.getElementById("contactInput").value.trim(),
+        address: document.getElementById("addressInput").value.trim()
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/update_profile`, {
+          method: "PUT",
+          headers: authHeaders(),
+          body: JSON.stringify(updatedUser)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Update failed.");
+
+        alert("✅ Profile updated successfully!");
+        currentUser = { ...currentUser, ...updatedUser };
+        renderProfile(currentUser);
+        document.getElementById("saveBtn").style.display = "none";
+        document.getElementById("editBtn").style.display = "inline-block";
+      } catch (err) {
+        console.error(err);
+        alert("❌ " + err.message);
+      }
+    });
+
+    // Sign out
+    document.getElementById("signOutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "signin.html";
+    });
+
+    // Go back
+    document.getElementById("backBtn").addEventListener("click", () => {
+      window.location.href = "userdash.html";
+    });
+
+    loadProfile();
+  </script>
+</body>
+</html>

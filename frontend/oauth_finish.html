@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <script>
+    const hash = new URLSearchParams(window.location.hash.substring(1));
+    const token = hash.get("token");
+    const email = hash.get("email");
+
+    if (token) {
+      try {
+        // Decode the JWT payload to extract username
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const username = payload.username || (email ? email.split("@")[0] : "User");
+
+        // Store details locally for later use
+        localStorage.setItem("token", token);
+        localStorage.setItem("user_email", email);
+        localStorage.setItem("username", username);
+
+        // Redirect to dashboard
+        window.location.href = "userdash.html";
+      } catch (e) {
+        console.error("Error parsing token:", e);
+        alert("Something went wrong while processing login.");
+        window.location.href = "signin.html";
+      }
+    } else {
+      alert("Login failed or invalid response from server.");
+      window.location.href = "signin.html";
+    }
+  </script>
+</head>
+<body>
+  Redirecting...
+</body>
+</html>

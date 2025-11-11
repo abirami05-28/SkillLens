@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillLens - Sign Up</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f8f9fc;
+      color: #333;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      padding: 15px 40px;
+      z-index: 1000;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 18px;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: #4facfe;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    .nav-buttons .signin {
+      background: transparent;
+      color: white;
+      border: 1px solid white;
+    }
+
+    .nav-buttons .signin:hover {
+      background: white;
+      color: #333;
+    }
+
+    .nav-buttons .signup {
+      background: #4facfe;
+      color: white;
+    }
+
+    .nav-buttons .signup:hover {
+      background: #00c4ff;
+    }
+
+    .signup-container {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 80px;
+    }
+
+    .signup-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .signup-box h2 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      color: #2c3e50;
+    }
+
+    .google-btn {
+      background: #fdf5e6;
+      color: #333;
+      border: 1px solid #ddd;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 20px;
+      transition: background 0.3s;
+      width: 100%;
+    }
+
+    .google-btn:hover {
+      background: #f5e1b9;
+    }
+
+    .signup-box input, .signup-box textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    .signup-box .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .signup-box button {
+      flex: 1;
+      margin: 0 5px;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .back-btn {
+      background: #ccc;
+      color: #333;
+    }
+
+    .back-btn:hover {
+      background: #aaa;
+    }
+
+    .register-btn {
+      background: #4facfe;
+      color: white;
+    }
+
+    .register-btn:hover {
+      background: #00c4ff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-links">
+      <a href="index.html#home">Home</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#modules">Features</a>
+      <a href="index.html#faqs">FAQs</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+    <div class="nav-buttons">
+      <button class="signin" onclick="window.location.href='signin.html'">Sign In</button>
+      <button class="signup" onclick="window.location.href='signup.html'">Sign Up</button>
+    </div>
+  </nav>
+
+  <!-- SIGN UP FORM -->
+  <div class="signup-container">
+    <div class="signup-box">
+      <h2>Sign Up</h2>
+      <button type="button" class="google-btn" id="googleLoginBtn">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" width="20" style="vertical-align: middle; margin-right: 8px;">
+        Sign in with Google
+      </button>
+      <form id="signupForm">
+        <input type="email" id="email" placeholder="Organization Email ID" required>
+        <input type="text" id="username" placeholder="Username" required minlength="3">
+        <input type="password" id="password" placeholder="Password (min 6 chars)" required minlength="6">
+        <input type="text" id="orgname" placeholder="Organization Name" required>
+        <input type="tel" id="contact" placeholder="Contact Number" pattern="[0-9]{10}" required>
+        <textarea id="address" placeholder="Address" rows="3" required></textarea>
+        <div class="button-group">
+          <button type="button" class="back-btn" onclick="window.location.href='index.html'">Back</button>
+          <button type="submit" class="register-btn">Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ JS Links -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.getElementById("signupForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      signup(); // defined in auth.js
+    });
+
+    document.getElementById("googleLoginBtn").addEventListener("click", googleLogin);
+  </script>
+</body>
+</html>

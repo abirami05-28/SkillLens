@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkillLens - Hiring Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/config.js"></script>
+
+  <style>
+    :root{
+      --primary:#4facfe;
+      --secondary:#2c3e50;
+      --light-bg:#f8f9fc;
+      --card-bg:#fff;
+      --text-dark:#2c3e50;
+      --text-light:#777;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
+    html,body{height:100%;overflow:hidden}
+    body{background:var(--light-bg);color:var(--text-dark);display:flex;flex-direction:column}
+
+    nav{
+      position:fixed;top:0;left:0;right:0;height:56px;
+      display:flex;justify-content:space-between;align-items:center;
+      background:rgba(0,0,0,0.85);padding:0 20px;z-index:1000;
+      box-shadow:0 2px 8px rgba(0,0,0,0.12);
+    }
+    .nav-left{display:flex;align-items:center;gap:14px}
+    .nav-links{display:flex;gap:12px}
+    nav a{color:white;text-decoration:none;font-size:14px}
+    nav a:hover{color:var(--primary)}
+    #userEmail{color:var(--primary);font-weight:600}
+    .menu-toggle{font-size:20px;color:white;cursor:pointer;padding:6px;border-radius:6px}
+    .menu-toggle:hover{background:rgba(255,255,255,0.04)}
+
+    .sidebar{
+      position:fixed;top:56px;left:0;height:calc(100% - 56px);
+      width:0;background:var(--secondary);transition:width .28s;overflow-x:hidden;z-index:900;
+      display:flex;flex-direction:column;
+    }
+    .sidebar.expanded{width:200px}
+    .sidebar a{color:white;text-decoration:none;padding:12px 14px;display:block}
+    .sidebar a:hover{background:#34495e}
+
+    .content{
+      margin-top:56px;margin-left:0;transition:margin-left .28s;padding:12px;height:calc(100vh - 56px);
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .sidebar.expanded ~ .content{margin-left:200px}
+
+    .page-header{text-align:center;color:var(--primary);font-weight:700;margin-bottom:8px}
+
+    /* Grid layout for charts */
+    .charts-grid{
+      flex:1;
+      display:grid;
+      gap:10px;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      grid-template-areas:
+        "pie bar"
+        "scatter bias";
+      height:100%;
+      transition:all .3s ease;
+    }
+    #pieCard{grid-area:pie}
+    #barCard{grid-area:bar}
+    #scatterCard{grid-area:scatter}
+    #biasCard{grid-area:bias}
+
+    .chart-card{
+      background:var(--card-bg);
+      border-radius:12px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:all .3s ease;
+    }
+    .chart-card h3{margin:0;color:var(--primary);font-size:0.95rem;text-align:center}
+    .chart-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas {
+      width: 90% !important;
+      height: 90% !important;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      display: block;
+    }
+
+    .chart-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    /* Expanded mode */
+    .charts-grid.expanded-mode{
+      grid-template-columns:repeat(3,1fr);
+      grid-template-rows:calc(100% - 120px) 120px;
+      grid-template-areas:
+        "top top top"
+        "b0 b1 b2";
+    }
+    .chart-card.expanded{
+      box-shadow:0 22px 60px rgba(0,0,0,0.18);
+      z-index:6;
+    }
+    .charts-grid.expanded-mode .chart-card:not(.expanded){
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;
+    }
+    .charts-grid.expanded-mode .chart-card:not(.expanded) canvas{
+      max-height:90px !important;
+      width:auto !important;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-left">
+      <div class="menu-toggle" id="menuToggle">☰</div>
+      <div class="nav-links">
+        <a href="index2.html#home">Home</a>
+        <a href="index2.html#about">About</a>
+        <a href="index2.html#modules">Features</a>
+        <a href="index2.html#faqs">FAQs</a>
+      </div>
+    </div>
+    <div id="userEmail">Loading...</div>
+  </nav>
+
+  <div class="sidebar" id="sidebar" aria-hidden="true">
+    <a href="resume_parse.html">Resume Parsing</a>
+    <a href="hiring_analysis.html">Hiring Analysis</a>
+    <a href="candidate_ranking.html">Candidate Ranking</a>
+    <a href="interview_schedule.html">Interview Scheduler</a>
+    <a href="my_acc.html">My Account</a>
+  </div>
+
+  <div class="content">
+    <div class="page-header">Hiring Analysis Dashboard</div>
+    <div style="text-align:center; margin-bottom:10px;">
+      <button id="recomputeBtn" style="padding:10px 18px; background:linear-gradient(135deg,#4facfe,#00c6ff);
+        color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">
+        🔄 Recompute Analytics
+      </button>
+      <p id="recomputeStatus" style="margin-top:6px; color:#777;"></p>
+    </div>
+    <div class="charts-grid" id="chartsGrid">
+      <div class="chart-card" id="pieCard">
+        <h3>Skill Distribution</h3>
+        <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="chart-card" id="barCard">
+        <h3>Recruitment Funnel</h3>
+        <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+      </div>
+      <div class="chart-card" id="scatterCard">
+        <h3>Candidate Clusters</h3>
+        <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+      </div>
+      <div class="chart-card" id="biasCard">
+        <h3>Bias Summary (Gender)</h3>
+        <div class="chart-wrap"><canvas id="biasChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Sidebar
+  const sidebar = document.getElementById("sidebar");
+  const menuToggle = document.getElementById("menuToggle");
+  menuToggle.addEventListener("click", () => {
+    const expanded = sidebar.classList.toggle("expanded");
+    sidebar.setAttribute("aria-hidden", !expanded);
+    menuToggle.textContent = expanded ? "✕" : "☰";
+  });
+
+  // Load user
+  async function loadUser() {
+    const token = getToken();
+    const userEl = document.getElementById("userEmail");
+    if (!token) { userEl.textContent = "Guest"; return; }
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+      const data = await res.json();
+      userEl.textContent = data.user?.username || data.user?.email || "User";
+    } catch { userEl.textContent = "User"; }
+  }
+  loadUser();
+
+  // Chart contexts
+  const pieCtx = document.getElementById("pieChart").getContext("2d");
+  const barCtx = document.getElementById("barChart").getContext("2d");
+  const scatterCtx = document.getElementById("scatterChart").getContext("2d");
+  const biasCtx = document.getElementById("biasChart").getContext("2d");
+
+  // Load charts from backend
+async function loadCharts() {
+  try {
+    // 🔹 Recruitment Funnel (Bar)
+    const funnelRes = await fetch(`${API_BASE}/analytics/funnel`, { headers: authHeaders() });
+    const funnel = await funnelRes.json();
+    const barChart = new Chart(barCtx, {
+      type: "bar",
+      data: {
+        labels: ["Total", "Screened", "Shortlisted", "Hired"],
+        datasets: [{
+          label: "Candidates",
+          data: [funnel.total, funnel.screened, funnel.shortlisted, funnel.hired],
+          backgroundColor: "#4facfe"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.3,
+        layout: { padding: 10 },
+        plugins: {
+          legend: { display: false },
+          title: { display: false }
+        },
+        scales: {
+          x: { ticks: { color: "#2c3e50" }, grid: { display: false } },
+          y: { ticks: { color: "#2c3e50" }, grid: { color: "rgba(0,0,0,0.05)" } }
+        }
+      }
+    });
+    barCtx.canvas.chartInstance = barChart;
+
+    // 🔹 Skill Distribution (Pie)
+    const skillRes = await fetch(`${API_BASE}/analytics/skills`, { headers: authHeaders() });
+    const skillData = await skillRes.json();
+    const labels = skillData.rules.slice(0, 5).map(r => r?.antecedents?.join(", ") || "N/A");
+    const values = skillData.rules.slice(0, 5).map(r => Math.round(r.confidence * 100));
+    const pieChart = new Chart(pieCtx, {
+      type: "pie",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: values,
+            backgroundColor: ["#4facfe", "#00c6ff", "#ff8c42", "#a1c181", "#f45b69"],
+            borderWidth: 1,
+            hoverOffset: 10,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1,
+        layout: { padding: 10 },
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              boxWidth: 12,
+              font: { size: 12 },
+              color: "#2c3e50",
+            },
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: "rgba(0,0,0,0.8)",
+            titleColor: "#fff",
+            bodyColor: "#fff",
+            padding: 10,
+            callbacks: {
+              label: function (context) {
+                const label = context.label || "";
+                const value = context.parsed || 0;
+                return `${label}: ${value}%`;
+              },
+            },
+          },
+          title: {
+            display: false,
+          },
+        },
+        animation: {
+          animateRotate: true,
+          animateScale: true,
+        },
+      },
+    });
+    pieCtx.canvas.chartInstance = pieChart;
+
+    // 🔹 Candidate Clusters (Scatter)
+    const clusterRes = await fetch(`${API_BASE}/analytics/clusters`, { headers: authHeaders() });
+    const clusterData = await clusterRes.json();
+    const scatterData = clusterData.clusters.map(c => ({ x: c.cluster, y: c.count }));
+    const scatterChart = new Chart(scatterCtx, {
+      type: "scatter",
+      data: {
+        datasets: [{
+          label: "Clusters",
+          data: scatterData,
+          backgroundColor: "#4facfe"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.3,
+        layout: { padding: 10 },
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              boxWidth: 12,
+              font: { size: 12 },
+              color: "#2c3e50"
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: "Cluster", color: "#2c3e50" }, ticks: { color: "#2c3e50" } },
+          y: { title: { display: true, text: "Count", color: "#2c3e50" }, ticks: { color: "#2c3e50" } }
+        }
+      }
+    });
+    scatterCtx.canvas.chartInstance = scatterChart;
+
+    // 🔹 Bias Summary (Gender)
+    const biasRes = await fetch(`${API_BASE}/analytics/bias/gender`, { headers: authHeaders() });
+    const biasData = await biasRes.json();
+    const biasLabels = Object.keys(biasData.selection_rate || {});
+    const selectionRates = Object.values(biasData.selection_rate || {});
+    const avgScores = Object.values(biasData.avg_score || {});
+    const biasChart = new Chart(biasCtx, {
+      type: "bar",
+      data: {
+        labels: biasLabels,
+        datasets: [
+          { label: "Selection Rate", data: selectionRates, backgroundColor: "rgba(79,172,254,0.8)" },
+          { label: "Average Score", data: avgScores, backgroundColor: "rgba(0,198,255,0.8)" }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.3,
+        layout: { padding: 10 },
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              boxWidth: 12,
+              font: { size: 12 },
+              color: "#2c3e50"
+            }
+          },
+          title: { display: false }
+        },
+        scales: {
+          x: { ticks: { color: "#2c3e50" }, grid: { display: false } },
+          y: { ticks: { color: "#2c3e50" }, grid: { color: "rgba(0,0,0,0.05)" } }
+        }
+      }
+    });
+    biasCtx.canvas.chartInstance = biasChart;
+  } catch (err) {
+    console.error("Error loading analytics:", err);
+  }
+}
+
+  loadCharts();
+
+  // Recompute analytics
+  document.getElementById("recomputeBtn").addEventListener("click", async () => {
+    const status = document.getElementById("recomputeStatus");
+    status.textContent = "⏳ Recomputing analytics, please wait...";
+    status.style.color = "#4facfe";
+    try {
+      const res = await fetch(`${API_BASE}/analytics/recompute_all`, { method: "POST", headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        status.textContent = "✅ Analytics recomputed successfully!";
+        status.style.color = "green";
+        setTimeout(loadCharts, 800);
+      } else {
+        status.textContent = "❌ Failed to recompute analytics: " + (data.detail || "Unknown error");
+        status.style.color = "red";
+      }
+    } catch (err) {
+      status.textContent = "💥 Server error: " + err.message;
+      status.style.color = "red";
+    }
+  });
+
+  // 🔄 Expandable charts (same behavior as dummy)
+  const grid = document.getElementById('chartsGrid');
+  const cards = Array.from(document.querySelectorAll('.chart-card'));
+  const idToArea = { pieCard: 'pie', barCard: 'bar', scatterCard: 'scatter', biasCard: 'bias' };
+  const defaultAreas = `"pie bar" "scatter bias"`;
+  function collapseAll() {
+    grid.classList.remove('expanded-mode');
+    grid.style.gridTemplateColumns = '1fr 1fr';
+    grid.style.gridTemplateRows = '1fr 1fr';
+    grid.style.gridTemplateAreas = defaultAreas;
+    cards.forEach(c => c.classList.remove('expanded'));
+  }
+  function expandCard(clickedCard) {
+    const others = cards.filter(c => c !== clickedCard);
+    const topName = idToArea[clickedCard.id];
+    grid.classList.add('expanded-mode');
+    grid.style.gridTemplateColumns = '1fr 1fr 1fr';
+    grid.style.gridTemplateRows = 'calc(100% - 120px) 120px';
+    const topRow = `"${topName} ${topName} ${topName}"`;
+    const bottomRow = `"${idToArea[others[0].id]} ${idToArea[others[1].id]} ${idToArea[others[2].id]}"`;
+    grid.style.gridTemplateAreas = topRow + '\n' + bottomRow;
+    cards.forEach(c => c.classList.remove('expanded'));
+    clickedCard.classList.add('expanded');
+  }
+  cards.forEach(card => {
+    card.addEventListener('click', e => {
+      e.stopPropagation();
+      if (card.classList.contains('expanded')) collapseAll();
+      else expandCard(card);
+    });
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.chart-card')) collapseAll(); });
+</script>
+</body>
+</html>
