@@ -1,14 +1,40 @@
+# === Core Framework ===
 fastapi
-uvicorn
-pymongo[srv]
+uvicorn[standard]
+
+# === Database & Async Drivers ===
 motor
+pymongo[srv]
 python-dotenv
+
+# === Authentication & Security ===
 bcrypt
 pyjwt
+
+# === File Handling & HTTP ===
 aiofiles
-aif360
-boto3
 python-multipart
 requests
+
+# === Cloud Integrations ===
+boto3
 google-auth
 google-auth-oauthlib
+google-api-python-client
+
+# === Machine Learning & NLP ===
+sentence-transformers
+transformers
+torch
+lightgbm
+scikit-learn
+numpy
+pandas
+
+# === Fairness & Bias Evaluation ===
+aif360
+
+# === Utility & Analytics ===
+matplotlib
+scipy
+tqdm
